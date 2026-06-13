@@ -7,7 +7,7 @@ type Props = {
 export default function TopicSelect({ onPick }: Props) {
   return (
     <div className="mx-auto flex min-h-full max-w-xl flex-col px-6">
-      <header className="pt-20 pb-16">
+      <header className="pt-10 pb-8">
         <h1 className="text-6xl font-semibold tracking-tight">KATA</h1>
         <p className="mt-3 text-neutral-500">
           Your body is the controller. Act out the word to flip the card.

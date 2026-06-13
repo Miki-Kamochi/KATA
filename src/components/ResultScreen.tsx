@@ -32,7 +32,7 @@ export default function ResultScreen({
   }, []);
 
   return (
-    <div className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-6">
+    <div className="mx-auto flex max-w-xl flex-col px-6 py-12">
       <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
         {deck.title}
       </div>
@@ -40,7 +40,7 @@ export default function ResultScreen({
         Deck complete
       </h1>
 
-      <div className="mt-12 flex items-end gap-12">
+      <div className="mt-8 flex items-end gap-12">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
             Score
@@ -64,7 +64,7 @@ export default function ResultScreen({
         {isBest ? "New best" : `Best ${best}/${total}`}
       </div>
 
-      <div className="mt-12 flex gap-3">
+      <div className="mt-8 flex gap-3">
         <button
           onClick={onReplay}
           className="rounded-lg bg-neutral-900 px-6 py-3 text-sm font-medium text-white hover:bg-neutral-700"

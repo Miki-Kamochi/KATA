@@ -1,6 +1,63 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IDLE_CLASS } from "../data/decks";
-import type { TMPoseModel } from "../types/tmpose";
+import type { TMPoseModel, TMPoseKeypoint } from "../types/tmpose";
+
+// PoseNet adjacent joint pairs for the body skeleton.
+const SKELETON_PAIRS: [number, number][] = [
+  [0, 1], [0, 2], [1, 3], [2, 4],          // face
+  [5, 6],                                    // shoulders
+  [5, 7], [7, 9],                            // left arm
+  [6, 8], [8, 10],                           // right arm
+  [5, 11], [6, 12], [11, 12],                // torso
+  [11, 13], [13, 15],                        // left leg
+  [12, 14], [14, 16],                        // right leg
+];
+
+function drawSkeleton(
+  ctx: CanvasRenderingContext2D,
+  keypoints: TMPoseKeypoint[],
+  canvasWidth: number,
+  sx: number,
+  sy: number,
+  side: number,
+) {
+  const MIN_CONF = 0.2;
+  const INPUT_SIDE = 257;
+
+  // Map each keypoint from mirrored input-canvas space to display canvas space.
+  // The input canvas is the mirrored square crop; the display canvas is the
+  // full mirrored video — so x maps to the same mirrored region.
+  const pts = keypoints.map((kp) => ({
+    score: kp.score,
+    x: (canvasWidth - sx - side) + (kp.position.x / INPUT_SIDE) * side,
+    y: sy + (kp.position.y / INPUT_SIDE) * side,
+  }));
+
+  ctx.save();
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 3;
+  ctx.fillStyle = "#38bdf8";
+
+  for (const [a, b] of SKELETON_PAIRS) {
+    const pa = pts[a], pb = pts[b];
+    if (pa && pb && pa.score >= MIN_CONF && pb.score >= MIN_CONF) {
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+  }
+
+  for (const pt of pts) {
+    if (pt.score >= MIN_CONF) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
 
 export type Prediction = { topClass: string; probability: number };
 export type ClassPrediction = { className: string; probability: number };
@@ -27,9 +84,11 @@ const MOCK_SIMULATE_FRAMES = 16; // how long a simulated motion is "held" high
  *
  * Attach the returned `videoRef`/`canvasRef` to a <video>/<canvas> in the DOM.
  */
-export function usePoseClassifier(modelPath: string) {
+export function usePoseClassifier(modelPath: string, showSkeleton = true) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const showSkeletonRef = useRef(showSkeleton);
+  showSkeletonRef.current = showSkeleton;
 
   const [status, setStatus] = useState<ClassifierStatus>({
     ready: false,
@@ -107,6 +166,16 @@ export function usePoseClassifier(modelPath: string) {
       inputCanvas.height = INPUT_SIDE;
       const inputCtx = inputCanvas.getContext("2d");
 
+      // Persists the latest keypoints across async inference gaps so the
+      // skeleton is redrawn every display frame rather than only in the brief
+      // window between inference completion and the next canvas clear.
+      let latestPoseFrame: {
+        keypoints: TMPoseKeypoint[];
+        sx: number;
+        sy: number;
+        side: number;
+      } | null = null;
+
       const loop = async () => {
         if (cancelled) return;
         const v = videoRef.current;
@@ -120,6 +189,17 @@ export function usePoseClassifier(modelPath: string) {
           ctx.scale(-1, 1);
           ctx.drawImage(v, -canvas.width, 0, canvas.width, canvas.height);
           ctx.restore();
+          // Draw the most recent skeleton on every display frame.
+          if (showSkeletonRef.current && latestPoseFrame) {
+            drawSkeleton(
+              ctx,
+              latestPoseFrame.keypoints,
+              canvas.width,
+              latestPoseFrame.sx,
+              latestPoseFrame.sy,
+              latestPoseFrame.side,
+            );
+          }
         }
 
         let prediction: Prediction = { topClass: IDLE_CLASS, probability: 1 };
@@ -148,19 +228,8 @@ export function usePoseClassifier(modelPath: string) {
             // Normalise to lowercase so deck motion strings always match
             prediction = { topClass: top.className.toLowerCase(), probability: top.probability };
 
-            // Keypoints are in mirrored INPUT_SIDE-square space. The display canvas is
-            // mirrored the same way, so map the square crop into the display's centered
-            // region with no extra flip.
-            if (pose && window.tmPose) {
-              const mapped = pose.keypoints.map((kp) => ({
-                ...kp,
-                position: {
-                  x: sx + (kp.position.x / INPUT_SIDE) * side,
-                  y: sy + (kp.position.y / INPUT_SIDE) * side,
-                },
-              }));
-              window.tmPose.drawKeypoints(mapped, 0.5, ctx);
-              window.tmPose.drawSkeleton(mapped, 0.5, ctx);
+            if (pose?.keypoints?.length) {
+              latestPoseFrame = { keypoints: pose.keypoints, sx, sy, side };
             }
           } catch {
             // transient frame error; keep last prediction shape
