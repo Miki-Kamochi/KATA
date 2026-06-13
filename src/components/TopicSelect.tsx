@@ -6,35 +6,37 @@ type Props = {
 
 export default function TopicSelect({ onPick }: Props) {
   return (
-    <div className="mx-auto flex min-h-full max-w-2xl flex-col gap-6 p-6">
-      <header className="pt-8 text-center">
-        <h1 className="text-5xl font-black tracking-tight text-white">KATA</h1>
-        <p className="mt-2 text-slate-400">
+    <div className="mx-auto flex min-h-full max-w-xl flex-col px-6">
+      <header className="pt-20 pb-16">
+        <h1 className="text-6xl font-semibold tracking-tight">KATA</h1>
+        <p className="mt-3 text-neutral-500">
           Your body is the controller. Act out the word to flip the card.
         </p>
       </header>
 
-      <h2 className="text-sm uppercase tracking-widest text-slate-500">
-        Pick a topic
-      </h2>
+      <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+        Topics
+      </div>
 
-      <div className="grid gap-4">
+      <div className="mt-2 border-t border-neutral-200">
         {DECKS.map((deck) => (
           <button
             key={deck.id}
             onClick={() => onPick(deck)}
-            className="flex items-center gap-4 rounded-2xl bg-white/5 p-5 text-left transition hover:bg-white/10"
+            className="group flex w-full items-baseline justify-between gap-6 border-b border-neutral-200 py-6 text-left"
           >
-            <span className="text-4xl">{deck.emoji}</span>
             <span>
-              <span className="block text-xl font-bold text-white">
+              <span className="block text-2xl font-medium tracking-tight">
                 {deck.title}
               </span>
-              <span className="block text-sm text-slate-400">
+              <span className="mt-1 block text-sm text-neutral-500">
                 {deck.description}
               </span>
-              <span className="mt-1 block text-xs text-slate-500">
-                {deck.cards.length} words
+            </span>
+            <span className="flex shrink-0 items-baseline gap-4 text-neutral-400">
+              <span className="text-sm tabular-nums">{deck.cards.length}</span>
+              <span className="text-xl transition-transform duration-200 group-hover:translate-x-1">
+                →
               </span>
             </span>
           </button>

@@ -1,9 +1,16 @@
 import { useEffect } from "react";
 import type { Deck } from "../data/decks";
 
+function formatTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
 type Props = {
   deck: Deck;
   score: number;
+  elapsed: number;
   best: number;
   onReplay: () => void;
   onHome: () => void;
@@ -12,6 +19,7 @@ type Props = {
 export default function ResultScreen({
   deck,
   score,
+  elapsed,
   best,
   onReplay,
   onHome,
@@ -24,32 +32,48 @@ export default function ResultScreen({
   }, []);
 
   return (
-    <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-6 p-6 text-center">
-      <div className="text-6xl">🎉</div>
-      <h1 className="text-3xl font-bold text-white">Deck complete!</h1>
+    <div className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-6">
+      <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+        {deck.title}
+      </div>
+      <h1 className="mt-2 text-4xl font-semibold tracking-tight">
+        Deck complete
+      </h1>
 
-      <div className="rounded-2xl bg-white/5 px-10 py-6">
-        <div className="text-sm uppercase tracking-widest text-slate-400">
-          {deck.title}
+      <div className="mt-12 flex items-end gap-12">
+        <div>
+          <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+            Score
+          </div>
+          <div className="mt-1 text-6xl font-semibold tabular-nums tracking-tight">
+            {score}
+            <span className="text-2xl text-neutral-400">/{total}</span>
+          </div>
         </div>
-        <div className="mt-1 text-5xl font-black text-emerald-400">
-          {score}/{total}
-        </div>
-        <div className="mt-2 text-sm text-slate-400">
-          {isBest ? "New best! 🏆" : `Best: ${best}/${total}`}
+        <div>
+          <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+            Time
+          </div>
+          <div className="mt-1 text-6xl font-semibold tabular-nums tracking-tight">
+            {formatTime(elapsed)}
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="mt-4 text-sm text-neutral-500">
+        {isBest ? "New best" : `Best ${best}/${total}`}
+      </div>
+
+      <div className="mt-12 flex gap-3">
         <button
           onClick={onReplay}
-          className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-black hover:bg-emerald-400"
+          className="rounded-lg bg-neutral-900 px-6 py-3 text-sm font-medium text-white hover:bg-neutral-700"
         >
           Play again
         </button>
         <button
           onClick={onHome}
-          className="rounded-xl bg-white/10 px-6 py-3 font-semibold text-white hover:bg-white/20"
+          className="rounded-lg border border-neutral-300 px-6 py-3 text-sm font-medium text-neutral-900 hover:border-neutral-900"
         >
           Home
         </button>

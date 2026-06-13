@@ -3,6 +3,7 @@ import { IDLE_CLASS } from "../data/decks";
 import type { TMPoseModel } from "../types/tmpose";
 
 export type Prediction = { topClass: string; probability: number };
+export type ClassPrediction = { className: string; probability: number };
 
 type ClassifierStatus = {
   /** Camera + (optionally) model are ready and the prediction loop is running. */
@@ -11,6 +12,8 @@ type ClassifierStatus = {
   isMock: boolean;
   /** Latest top prediction this frame. */
   prediction: Prediction;
+  /** All class probabilities this frame (for debug UI). */
+  allPredictions: ClassPrediction[];
   /** Human-readable problem (e.g. camera denied), or null. */
   error: string | null;
 };
@@ -32,6 +35,7 @@ export function usePoseClassifier(modelPath: string) {
     ready: false,
     isMock: false,
     prediction: { topClass: IDLE_CLASS, probability: 1 },
+    allPredictions: [],
     error: null,
   });
 
@@ -94,6 +98,15 @@ export function usePoseClassifier(modelPath: string) {
       // 3) Prediction loop
       const ctx = canvasRef.current?.getContext("2d") ?? null;
 
+      // Offscreen square canvas: TM trains on a SQUARE webcam feed, so we feed
+      // estimatePose a center-cropped square to match. Passing the raw non-square
+      // video stretches the body and throws off every keypoint.
+      const INPUT_SIDE = 257; // matches metadata.json inputResolution
+      const inputCanvas = document.createElement("canvas");
+      inputCanvas.width = INPUT_SIDE;
+      inputCanvas.height = INPUT_SIDE;
+      const inputCtx = inputCanvas.getContext("2d");
+
       const loop = async () => {
         if (cancelled) return;
         const v = videoRef.current;
@@ -102,7 +115,7 @@ export function usePoseClassifier(modelPath: string) {
         if (v && canvas && ctx && v.videoWidth) {
           canvas.width = v.videoWidth;
           canvas.height = v.videoHeight;
-          // Mirror horizontally so movement feels natural.
+          // Mirror the display so movement feels natural.
           ctx.save();
           ctx.scale(-1, 1);
           ctx.drawImage(v, -canvas.width, 0, canvas.width, canvas.height);
@@ -110,16 +123,45 @@ export function usePoseClassifier(modelPath: string) {
         }
 
         let prediction: Prediction = { topClass: IDLE_CLASS, probability: 1 };
+        let allPredictions: ClassPrediction[] = [];
 
-        if (model && v && v.videoWidth) {
+        if (model && v && v.videoWidth && canvas && ctx && inputCtx) {
           try {
-            const { posenetOutput } = await model.estimatePose(v);
-            const preds: Array<{ className: string; probability: number }> =
-              await model.predict(posenetOutput);
+            // Center-crop a square of the video into the square input canvas so the
+            // inference input matches TM's square training feed. TM trains on a MIRRORED
+            // webcam (flip=true), so we mirror the square here too — otherwise left/right
+            // come out swapped.
+            const side = Math.min(v.videoWidth, v.videoHeight);
+            const sx = (v.videoWidth - side) / 2;
+            const sy = (v.videoHeight - side) / 2;
+            inputCtx.save();
+            inputCtx.scale(-1, 1);
+            inputCtx.drawImage(v, sx, sy, side, side, -INPUT_SIDE, 0, INPUT_SIDE, INPUT_SIDE);
+            inputCtx.restore();
+
+            const { pose, posenetOutput } = await model.estimatePose(inputCanvas);
+            const preds: ClassPrediction[] = await model.predict(posenetOutput);
+            allPredictions = preds.map((p) => ({ ...p, className: p.className.toLowerCase() }));
             const top = preds.reduce((a, b) =>
               b.probability > a.probability ? b : a
             );
-            prediction = { topClass: top.className, probability: top.probability };
+            // Normalise to lowercase so deck motion strings always match
+            prediction = { topClass: top.className.toLowerCase(), probability: top.probability };
+
+            // Keypoints are in mirrored INPUT_SIDE-square space. The display canvas is
+            // mirrored the same way, so map the square crop into the display's centered
+            // region with no extra flip.
+            if (pose && window.tmPose) {
+              const mapped = pose.keypoints.map((kp) => ({
+                ...kp,
+                position: {
+                  x: sx + (kp.position.x / INPUT_SIDE) * side,
+                  y: sy + (kp.position.y / INPUT_SIDE) * side,
+                },
+              }));
+              window.tmPose.drawKeypoints(mapped, 0.5, ctx);
+              window.tmPose.drawSkeleton(mapped, 0.5, ctx);
+            }
           } catch {
             // transient frame error; keep last prediction shape
           }
@@ -133,12 +175,10 @@ export function usePoseClassifier(modelPath: string) {
           }
         }
 
-        setStatus((s) =>
-          s.prediction.topClass === prediction.topClass &&
-          s.prediction.probability === prediction.probability
-            ? s
-            : { ...s, prediction }
-        );
+        // Always publish a fresh frame so the matcher is fed every frame — even
+        // when the prediction is held perfectly steady (identical values would
+        // otherwise be skipped, freezing progress at a constant high confidence).
+        setStatus((s) => ({ ...s, prediction, allPredictions }));
 
         rafId = requestAnimationFrame(loop);
       };

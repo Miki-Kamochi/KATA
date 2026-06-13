@@ -1,12 +1,10 @@
-// Confidence smoothing for motion matching.
-//
-// Raw per-frame predictions flicker, so we require the target motion to stay
-// above a confidence threshold for a number of consecutive frames before we
-// count it as a real match. This prevents both flicker and brief false
-// positives from advancing the card.
+import { IDLE_CLASS } from "../data/decks";
 
-export const MATCH_THRESHOLD = 0.85; // min probability to count a frame as "hit"
-export const REQUIRED_HITS = 8; // consecutive qualifying frames to confirm a match
+export const MATCH_THRESHOLD = 0.65; // min target probability for a frame to qualify
+export const IDLE_MARGIN = 0.15;     // target must beat idle by this much to qualify
+export const REQUIRED_HITS = 6;      // accumulated qualifying frames to confirm a match
+
+type ClassProb = { className: string; probability: number };
 
 export class MotionMatcher {
   private targetMotion: string;
@@ -16,10 +14,9 @@ export class MotionMatcher {
     this.targetMotion = targetMotion;
   }
 
-  /** Point the matcher at a new motion and reset its progress. */
   setTarget(targetMotion: string) {
     this.targetMotion = targetMotion;
-    this.hits = 0;
+    this.reset();
   }
 
   reset() {
@@ -27,26 +24,35 @@ export class MotionMatcher {
   }
 
   /**
-   * Feed one frame's top prediction. Returns true exactly once, on the frame
-   * the match is confirmed. Progress (0..1) is exposed via `progress`.
+   * Feed one frame's full per-class predictions. A frame "qualifies" when the
+   * target motion clears the threshold AND beats the idle class by IDLE_MARGIN.
+   * Qualifying frames accumulate; a non-qualifying frame only decays the count
+   * by one, so a single flickered frame can't wipe out a real motion.
    */
-  push(topClass: string, probability: number): boolean {
-    if (topClass === this.targetMotion && probability >= MATCH_THRESHOLD) {
+  push(predictions: ClassProb[]): boolean {
+    const get = (name: string) =>
+      predictions.find(
+        (p) => p.className.toLowerCase() === name.toLowerCase()
+      )?.probability ?? 0;
+
+    const targetProb = get(this.targetMotion);
+    const idleProb = get(IDLE_CLASS);
+    const qualifies =
+      targetProb >= MATCH_THRESHOLD && targetProb - idleProb >= IDLE_MARGIN;
+
+    if (qualifies) {
       this.hits++;
     } else {
-      // Decay rather than hard-reset so a single dropped frame mid-motion
-      // doesn't throw away all progress.
       this.hits = Math.max(0, this.hits - 1);
     }
 
     if (this.hits >= REQUIRED_HITS) {
-      this.hits = 0;
+      this.reset();
       return true;
     }
     return false;
   }
 
-  /** How close the current motion is to confirming, 0..1, for the UI bar. */
   get progress(): number {
     return Math.min(1, this.hits / REQUIRED_HITS);
   }
