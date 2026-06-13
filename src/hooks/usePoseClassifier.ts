@@ -235,12 +235,18 @@ export function usePoseClassifier(modelPath: string, showSkeleton = true) {
             // transient frame error; keep last prediction shape
           }
         } else {
-          // Mock mode
+          // Mock mode — emit full per-class probs too, since the matcher reads
+          // allPredictions (not just the top class) to accumulate qualifying frames.
           if (mockFramesLeftRef.current > 0) {
             mockFramesLeftRef.current--;
             prediction = { topClass: mockMotionRef.current, probability: 0.95 };
+            allPredictions = [
+              { className: mockMotionRef.current, probability: 0.95 },
+              { className: IDLE_CLASS, probability: 0.05 },
+            ];
           } else {
             prediction = { topClass: IDLE_CLASS, probability: 0.9 };
+            allPredictions = [{ className: IDLE_CLASS, probability: 0.9 }];
           }
         }
 
