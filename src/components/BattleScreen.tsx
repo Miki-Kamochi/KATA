@@ -6,6 +6,7 @@ import BattleLobby from "./BattleLobby";
 
 type Props = {
   onHome: () => void;
+  initialDeckId?: string;
 };
 
 // 4-char codes; no 0/O/1/I to avoid confusion when read aloud.
@@ -18,10 +19,10 @@ function makeRoomCode(): string {
   return s;
 }
 
-export default function BattleScreen({ onHome }: Props) {
+export default function BattleScreen({ onHome, initialDeckId }: Props) {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
-  const [hostDeckId, setHostDeckId] = useState<string | null>(null);
+  const [hostDeckId, setHostDeckId] = useState<string | null>(initialDeckId ?? null);
   const [outcome, setOutcome] = useState<null | "win" | "lose">(null);
   const [myScore, setMyScore] = useState<number | null>(null);
   const [myAvatar, setMyAvatar] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export default function BattleScreen({ onHome }: Props) {
       <div className="mx-auto flex max-w-xl flex-col px-6 py-16">
         <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">Battle</div>
         <h1 className={`mt-2 text-5xl font-semibold tracking-tight ${won ? "text-emerald-600" : "text-neutral-900"}`}>
-          {won ? "You win 🎉" : "You lose"}
+          {won ? "You win" : "You lose"}
         </h1>
         <p className="mt-4 text-neutral-500">
           {won
@@ -117,6 +118,7 @@ export default function BattleScreen({ onHome }: Props) {
       onCapture={(dataUrl) => setMyAvatar(dataUrl || null)}
       lang={lang}
       onLang={setLang}
+      initialDeckId={initialDeckId}
       onCreate={(id) => {
         setHostDeckId(id);
         setIsHost(true);

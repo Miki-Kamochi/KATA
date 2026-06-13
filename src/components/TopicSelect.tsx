@@ -6,7 +6,7 @@ import LanguageToggle from "./LanguageToggle";
 
 type Props = {
   onPick: (deck: Deck, lang: Lang) => void;
-  onBattle: () => void;
+  onBattle: (deck: Deck) => void;
 };
 
 const DECK_COLORS: Record<string, { cover: string; spine: string }> = {
@@ -15,19 +15,16 @@ const DECK_COLORS: Record<string, { cover: string; spine: string }> = {
   "action-verbs": { cover: "bg-violet-700", spine: "bg-violet-900" },
 };
 
-const BOOK_HEIGHTS = ["h-52", "h-60", "h-56"];
+const BOOK_HEIGHTS = ["h-[25vh]", "h-[30vh]", "h-[28vh]"];
 
 export default function TopicSelect({ onPick, onBattle }: Props) {
   const [showDash, setShowDash] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [flipping, setFlipping] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>("en");
 
   function handleBookClick(deckId: string, isSelected: boolean) {
     setSelected(isSelected ? null : deckId);
-    setFlipping(deckId);
-    setTimeout(() => setFlipping(null), 450);
   }
 
   const best: Record<string, number> = JSON.parse(
@@ -46,7 +43,7 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
         {/* Nav */}
         <nav className="relative flex items-start justify-between pt-10 pb-10">
           <div>
-            <h1 className="font-display text-5xl font-bold tracking-tight">KATA</h1>
+            <h1 className="font-display text-4xl font-bold tracking-tight">KATA</h1>
             <p className="mt-1 text-xs text-neutral-400">Your body is the controller</p>
           </div>
           <div className="absolute left-1/2 mt-1 -translate-x-1/2">
@@ -58,17 +55,9 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
             </div>
           </div>
           <div className="mt-1 flex items-center gap-2">
-            {battleEnabled && (
-              <button
-                onClick={onBattle}
-                className="rounded-full bg-neutral-900 px-5 py-2 text-sm font-medium text-white hover:bg-neutral-700"
-              >
-                Battle
-              </button>
-            )}
             <button
               onClick={() => setShowDash(true)}
-              className="rounded-full border border-neutral-300 px-5 py-2 text-sm font-medium text-neutral-500 hover:border-neutral-400 hover:text-neutral-900"
+              className="rounded-full border border-neutral-900 px-5 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
             >
               Stats
             </button>
@@ -85,7 +74,7 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
               { cover: "bg-sky-300",    spine: "bg-sky-500",    h: "h-4" },
               { cover: "bg-amber-300",  spine: "bg-amber-500",  h: "h-6" },
             ].map((b, i) => (
-              <div key={i} className={`relative flex w-28 ${b.h} overflow-hidden rounded-sm shadow-sm`}>
+              <div key={i} className={`relative flex w-[104px] ${b.h} overflow-hidden rounded-sm shadow-sm`}>
                 <div className={`w-3 shrink-0 ${b.spine}`} />
                 <div className={`flex-1 ${b.cover}`} />
                 <div className="w-2 shrink-0 bg-neutral-100" style={{ backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.06) 1px, rgba(0,0,0,0.06) 2px)" }} />
@@ -106,7 +95,7 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
                 onMouseEnter={() => setHovered(deck.id)}
                 onMouseLeave={() => setHovered(null)}
                 className={[
-                  "w-28", h, "shrink-0",
+                  "w-[104px]", h, "shrink-0",
                   "transition-all duration-200 active:scale-[0.97]",
                   isSelected ? "-translate-y-4" : isHovered ? "-translate-y-1" : "",
                 ].join(" ")}
@@ -118,10 +107,7 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
                 }}
               >
                 <div
-                  className={[
-                    "relative w-full h-full overflow-hidden rounded-t-sm",
-                    flipping === deck.id ? "animate-book-flip" : "",
-                  ].join(" ")}
+                  className="relative w-full h-full overflow-hidden rounded-t-sm"
                 >
                   {/* Spine */}
                   <div className={`absolute inset-y-0 left-0 w-4 ${colors.spine}`} />
@@ -144,14 +130,14 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
           })}
 
           {/* Add deck button */}
-          <button className="mb-0 flex h-52 w-28 shrink-0 items-center justify-center rounded-t-sm border-2 border-dashed border-neutral-300 text-neutral-300 transition-colors hover:border-neutral-400 hover:text-neutral-400">
+          <button className="mb-0 flex h-[25vh] w-[104px] shrink-0 items-center justify-center rounded-t-sm border-2 border-dashed border-neutral-300 text-neutral-300 transition-colors hover:border-neutral-400 hover:text-neutral-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
           </button>
           {/* Decorative plant */}
           <div className="ml-auto shrink-0" style={{ alignSelf: "flex-end", marginBottom: 0 }}>
-            <svg width="120" height="190" viewBox="0 0 90 140" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
+            <svg className="w-[8.5vw]" viewBox="0 0 90 140" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", height: "auto" }}>
               {/* Pot body — bottom at y=140 */}
               <path d="M22 96 L26 140 L64 140 L68 96 Z" fill="#a16207" />
               {/* Pot rim */}
@@ -229,12 +215,22 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
               {showStart && (
                 <div className="flex items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4">
                   <LanguageToggle value={lang} onChange={setLang} />
-                  <button
-                    onClick={() => onPick(displayDeck, lang)}
-                    className="shrink-0 rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-neutral-700"
-                  >
-                    Start →
-                  </button>
+                  <div className="flex gap-2">
+                    {battleEnabled && (
+                      <button
+                        onClick={() => onBattle(displayDeck)}
+                        className="shrink-0 rounded-lg border border-neutral-900 px-5 py-2.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+                      >
+                        Battle
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onPick(displayDeck, lang)}
+                      className="shrink-0 rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-neutral-700"
+                    >
+                      Solo →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

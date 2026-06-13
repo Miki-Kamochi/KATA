@@ -77,7 +77,7 @@ function Avatar({ src, name }: { src?: string | null; name?: string }) {
   }
   return (
     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-semibold text-neutral-500">
-      {name?.trim()?.[0]?.toUpperCase() ?? "🙂"}
+      {name?.trim()?.[0]?.toUpperCase() ?? "?"}
     </div>
   );
 }
@@ -225,7 +225,7 @@ export default function GameScreen({
   const matchesTarget = prediction.topClass === card.motion;
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col gap-3 px-6 py-4">
+    <div className="mx-auto flex h-screen max-w-5xl flex-col gap-3 px-6 py-4 xl:max-w-7xl xl:px-12">
       {/* Top bar */}
       <div className="flex items-center justify-between text-sm text-neutral-400">
         <button
@@ -234,25 +234,22 @@ export default function GameScreen({
         >
           Quit
         </button>
-        <div className="text-2xl font-medium tabular-nums tracking-tight text-neutral-900">
-          {formatTime(elapsed)}
+        <div className="flex items-center gap-2 tabular-nums tracking-tight text-neutral-900">
+          <span className="text-2xl font-medium">{formatTime(elapsed)}</span>
+          <span className="text-neutral-300">·</span>
+          <span className="text-base font-medium">{cardIndex + 1} / {cards.length}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowSkeleton((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              showSkeleton
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200"
-            }`}
-          >
-            <span className={`inline-block h-2 w-2 rounded-full ${showSkeleton ? "bg-sky-400" : "bg-neutral-300"}`} />
-            Bones
-          </button>
-          <span className="tabular-nums">
-            {cardIndex + 1} / {cards.length}
-          </span>
-        </div>
+        <button
+          onClick={() => setShowSkeleton((v) => !v)}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            showSkeleton
+              ? "bg-neutral-900 text-white"
+              : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200"
+          }`}
+        >
+          <span className={`inline-block h-2 w-2 rounded-full ${showSkeleton ? "bg-sky-400" : "bg-neutral-300"}`} />
+          Bones
+        </button>
       </div>
 
       {/* Head-to-head progress (battle mode only) */}
@@ -277,20 +274,20 @@ export default function GameScreen({
 
       {/* Word card */}
       <div
-        className={`rounded-lg py-4 text-center transition-all duration-300 ${
+        className={`rounded-xl px-6 py-5 text-center transition-all duration-300 ${
           justCleared
             ? "scale-[1.02] bg-neutral-900 text-white"
-            : "text-neutral-900"
+            : "bg-white text-neutral-900"
         }`}
       >
-        <div className="text-xs uppercase tracking-[0.2em] text-neutral-400">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
           Act it out
         </div>
-        <div className="mt-2 text-5xl font-semibold tracking-tight">
+        <div className="mt-1 text-4xl font-bold tracking-tight lg:text-6xl xl:text-7xl">
           {word}
         </div>
         <div
-          className={`mt-3 text-sm ${
+          className={`mt-2 text-sm ${
             justCleared ? "text-neutral-300" : "text-neutral-500"
           }`}
         >
@@ -298,37 +295,29 @@ export default function GameScreen({
         </div>
       </div>
 
-      {/* Camera + live predictions side by side */}
-      <div className="flex w-full gap-4">
+      {/* Camera + live predictions */}
+      <div className="flex w-full flex-col gap-4 lg:flex-row">
         <div className="min-w-0 flex-1">
           <WebcamView videoRef={videoRef} canvasRef={canvasRef} />
         </div>
 
         {ready && !isMock && allPredictions.length > 0 && (
-          <div className="flex w-80 shrink-0 flex-col justify-center gap-4">
+          <div className="flex flex-row flex-wrap gap-3 lg:w-52 lg:shrink-0 lg:flex-col lg:justify-center">
             {[...allPredictions]
               .sort((a, b) => b.probability - a.probability)
               .map((p) => (
-                <div key={p.className} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between text-base">
-                    <span
-                      className={`font-mono ${
-                        p.className === card.motion
-                          ? "font-semibold text-neutral-900"
-                          : "text-neutral-400"
-                      }`}
-                    >
+                <div key={p.className} className="flex min-w-[140px] flex-1 flex-col gap-1 lg:min-w-0 lg:flex-none">
+                  <div className="flex justify-between text-xs">
+                    <span className={`font-mono ${p.className === card.motion ? "font-semibold text-neutral-900" : "text-neutral-400"}`}>
                       {p.className}
                     </span>
-                    <span className="tabular-nums text-neutral-500">
+                    <span className="tabular-nums text-neutral-400">
                       {Math.round(p.probability * 100)}%
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200">
                     <div
-                      className={`h-full rounded-full transition-[width] duration-100 ${
-                        p.className === card.motion ? "bg-neutral-900" : "bg-neutral-300"
-                      }`}
+                      className={`h-full rounded-full transition-[width] duration-100 ${p.className === card.motion ? "bg-neutral-900" : "bg-neutral-300"}`}
                       style={{ width: `${p.probability * 100}%` }}
                     />
                   </div>
@@ -340,17 +329,11 @@ export default function GameScreen({
 
       {/* Confidence / progress bar */}
       <div>
-        <div className="mb-2 flex justify-between text-xs text-neutral-400">
-          <span>
-            Detecting{" "}
-            <span className={matchesTarget ? "font-medium text-neutral-900" : ""}>
-              {prediction.topClass}
-            </span>{" "}
-            ({Math.round(prediction.probability * 100)}%)
-          </span>
+        <div className="mb-1.5 flex justify-between text-xs text-neutral-400">
+          <span className={matchesTarget ? "font-medium text-neutral-900" : ""}>{card.motion}</span>
           <span className="tabular-nums">{Math.round(progress * 100)}%</span>
         </div>
-        <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-200">
           <div
             className="h-full rounded-full bg-neutral-900 transition-[width] duration-100"
             style={{ width: `${progress * 100}%` }}

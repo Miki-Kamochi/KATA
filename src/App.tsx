@@ -9,7 +9,7 @@ type Screen =
   | { name: "select" }
   | { name: "game"; deck: Deck; lang: Lang }
   | { name: "result"; deck: Deck; lang: Lang; score: number; elapsed: number }
-  | { name: "battle" };
+  | { name: "battle"; deckId: string };
 
 const BEST_KEY     = "kata.best";
 const STATS_KEY    = "kata.stats";
@@ -61,12 +61,12 @@ export default function App() {
       {screen.name === "select" && (
         <TopicSelect
           onPick={(deck, lang) => setScreen({ name: "game", deck, lang })}
-          onBattle={() => setScreen({ name: "battle" })}
+          onBattle={(deck) => setScreen({ name: "battle", deckId: deck.id })}
         />
       )}
 
       {screen.name === "battle" && (
-        <BattleScreen onHome={() => setScreen({ name: "select" })} />
+        <BattleScreen onHome={() => setScreen({ name: "select" })} initialDeckId={screen.deckId} />
       )}
 
       {screen.name === "game" && (

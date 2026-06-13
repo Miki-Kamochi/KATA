@@ -14,6 +14,7 @@ type Props = {
   onCapture: (dataUrl: string) => void;
   lang: Lang;
   onLang: (lang: Lang) => void;
+  initialDeckId?: string;
   onCreate: (deckId: string) => void;
   onJoin: (code: string) => void;
   onStart: () => void;
@@ -30,6 +31,7 @@ export default function BattleLobby({
   onCapture,
   lang,
   onLang,
+  initialDeckId,
   onCreate,
   onJoin,
   onStart,
@@ -42,7 +44,7 @@ export default function BattleLobby({
   if (roomCode) {
     const ready = status === "ready" && opponent;
     return (
-      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-12">
+      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-6 lg:py-12">
         <button onClick={onHome} className="-ml-1 self-start text-sm text-neutral-400 hover:text-neutral-900">
           ← Leave
         </button>
@@ -68,7 +70,7 @@ export default function BattleLobby({
 
         {hostDeck && (
           <div className="mt-6 text-sm text-neutral-500">
-            Deck: <span className="font-medium text-neutral-900">{hostDeck.emoji} {hostDeck.title}</span>
+            Deck: <span className="font-medium text-neutral-900">{hostDeck.title}</span>
           </div>
         )}
 
@@ -87,7 +89,7 @@ export default function BattleLobby({
                 />
               ) : (
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100 text-2xl text-neutral-300">
-                  🙂
+                  ?
                 </div>
               )}
               <span className="text-sm text-neutral-500">
@@ -143,7 +145,7 @@ export default function BattleLobby({
   // ── Create: pick a deck ────────────────────────────────────────────────
   if (view === "create") {
     return (
-      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-12">
+      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-6 lg:py-12">
         <button onClick={() => setView("menu")} className="-ml-1 self-start text-sm text-neutral-400 hover:text-neutral-900">
           ← Back
         </button>
@@ -156,7 +158,7 @@ export default function BattleLobby({
               onClick={() => onCreate(deck.id)}
               className="flex items-center justify-between rounded-xl border border-neutral-200 px-5 py-4 text-left hover:border-neutral-900"
             >
-              <span className="font-medium">{deck.emoji} {deck.title}</span>
+              <span className="font-medium">{deck.title}</span>
               <span className="text-sm text-neutral-400">{deck.cards.length} cards</span>
             </button>
           ))}
@@ -169,7 +171,7 @@ export default function BattleLobby({
   if (view === "join") {
     const trimmed = code.trim().toUpperCase();
     return (
-      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-12">
+      <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-6 lg:py-12">
         <button onClick={() => setView("menu")} className="-ml-1 self-start text-sm text-neutral-400 hover:text-neutral-900">
           ← Back
         </button>
@@ -204,7 +206,7 @@ export default function BattleLobby({
 
   // ── Menu: create or join ───────────────────────────────────────────────
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-12">
+    <div className="mx-auto flex min-h-full max-w-md flex-col px-6 py-6 lg:py-12">
       <button onClick={onHome} className="-ml-1 self-start text-sm text-neutral-400 hover:text-neutral-900">
         ← Home
       </button>
@@ -214,7 +216,7 @@ export default function BattleLobby({
       </p>
       <div className="mt-10 flex flex-col gap-3">
         <button
-          onClick={() => setView("create")}
+          onClick={() => initialDeckId ? onCreate(initialDeckId) : setView("create")}
           className="rounded-lg bg-neutral-900 px-6 py-4 text-sm font-medium text-white hover:bg-neutral-700"
         >
           Create match
