@@ -76,7 +76,23 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
         </nav>
 
         {/* Bookshelf */}
-        <div className="flex items-end gap-4">
+        <div className="flex w-full items-end gap-4">
+
+          {/* Decorative horizontal stack — left */}
+          <div className="mb-0 flex shrink-0 flex-col-reverse gap-px">
+            {[
+              { cover: "bg-rose-400",   spine: "bg-rose-600",   h: "h-5" },
+              { cover: "bg-sky-300",    spine: "bg-sky-500",    h: "h-4" },
+              { cover: "bg-amber-300",  spine: "bg-amber-500",  h: "h-6" },
+            ].map((b, i) => (
+              <div key={i} className={`relative flex w-28 ${b.h} overflow-hidden rounded-sm shadow-sm`}>
+                <div className={`w-3 shrink-0 ${b.spine}`} />
+                <div className={`flex-1 ${b.cover}`} />
+                <div className="w-2 shrink-0 bg-neutral-100" style={{ backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.06) 1px, rgba(0,0,0,0.06) 2px)" }} />
+              </div>
+            ))}
+          </div>
+
           {DECKS.map((deck, i) => {
             const colors = DECK_COLORS[deck.id] ?? { cover: "bg-neutral-700", spine: "bg-neutral-900" };
             const isSelected = selected === deck.id;
@@ -126,6 +142,36 @@ export default function TopicSelect({ onPick, onBattle }: Props) {
               </button>
             );
           })}
+
+          {/* Add deck button */}
+          <button className="mb-0 flex h-52 w-28 shrink-0 items-center justify-center rounded-t-sm border-2 border-dashed border-neutral-300 text-neutral-300 transition-colors hover:border-neutral-400 hover:text-neutral-400">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+          {/* Decorative plant */}
+          <div className="ml-auto shrink-0" style={{ alignSelf: "flex-end", marginBottom: 0 }}>
+            <svg width="120" height="190" viewBox="0 0 90 140" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
+              {/* Pot body — bottom at y=140 */}
+              <path d="M22 96 L26 140 L64 140 L68 96 Z" fill="#a16207" />
+              {/* Pot rim */}
+              <rect x="18" y="88" width="54" height="10" rx="3" fill="#ca8a04" />
+              {/* Soil */}
+              <ellipse cx="45" cy="88" rx="27" ry="6" fill="#78350f" />
+              {/* Main stem */}
+              <path d="M45 84 Q45 64 45 36" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
+              {/* Left leaf low */}
+              <path d="M45 74 Q24 64 18 44 Q36 48 45 68" fill="#22c55e" />
+              {/* Right leaf low */}
+              <path d="M45 68 Q66 58 72 38 Q54 42 45 64" fill="#16a34a" />
+              {/* Left leaf mid */}
+              <path d="M45 56 Q26 44 22 24 Q40 30 45 52" fill="#22c55e" />
+              {/* Right leaf mid */}
+              <path d="M45 50 Q64 36 68 16 Q50 22 45 46" fill="#15803d" />
+              {/* Top leaf */}
+              <path d="M45 36 Q39 18 45 4 Q51 18 45 36" fill="#22c55e" />
+            </svg>
+          </div>
         </div>
 
         {/* Shelf plank */}
