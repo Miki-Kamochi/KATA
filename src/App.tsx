@@ -9,7 +9,9 @@ type Screen =
   | { name: "game"; deck: Deck }
   | { name: "result"; deck: Deck; score: number; elapsed: number };
 
-const BEST_KEY = "kata.best";
+const BEST_KEY     = "kata.best";
+const STATS_KEY    = "kata.stats";
+const ACTIVITY_KEY = "kata.activity";
 
 function readBest(deckId: string): number {
   try {
@@ -30,6 +32,25 @@ function writeBest(deckId: string, score: number) {
   }
 }
 
+function writeSession(score: number, elapsed: number) {
+  try {
+    const stats = JSON.parse(
+      localStorage.getItem(STATS_KEY) ?? '{"totalGames":0,"totalCards":0,"totalTime":0}'
+    );
+    stats.totalGames += 1;
+    stats.totalCards += score;
+    stats.totalTime  += elapsed;
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+
+    const today = new Date().toISOString().slice(0, 10);
+    const activity = JSON.parse(localStorage.getItem(ACTIVITY_KEY) ?? "{}");
+    activity[today] = (activity[today] ?? 0) + score;
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity));
+  } catch {
+    // ignore storage failures
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: "select" });
 
@@ -46,6 +67,7 @@ export default function App() {
           deck={screen.deck}
           onFinish={(score, elapsed) => {
             writeBest(screen.deck.id, score);
+            writeSession(score, elapsed);
             setScreen({ name: "result", deck: screen.deck, score, elapsed });
           }}
           onQuit={() => setScreen({ name: "select" })}

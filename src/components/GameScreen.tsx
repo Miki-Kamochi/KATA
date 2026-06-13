@@ -4,6 +4,22 @@ import { usePoseClassifier } from "../hooks/usePoseClassifier";
 import { MotionMatcher } from "../game/matcher";
 import WebcamView from "./WebcamView";
 
+function pickVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = [
+    "Microsoft Aria Online (Natural) - English (United States)",
+    "Microsoft Jenny Online (Natural) - English (United States)",
+    "Microsoft Guy Online (Natural) - English (United States)",
+    "Google US English",
+    "Samantha",
+  ];
+  for (const name of preferred) {
+    const v = voices.find((v) => v.name === name);
+    if (v) return v;
+  }
+  return voices.find((v) => v.lang === "en-US") ?? null;
+}
+
 type Props = {
   deck: Deck;
   onFinish: (score: number, elapsed: number) => void;
@@ -46,15 +62,22 @@ export default function GameScreen({ deck, onFinish, onQuit }: Props) {
     setProgress(0);
   }, [card.motion, matcher]);
 
-  // Read the word aloud whenever the card changes.
+  // Read the word then the hint aloud; cancel both if the card changes.
   useEffect(() => {
     if (!ready) return;
-    const utterance = new SpeechSynthesisUtterance(card.word);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
+    const word = new SpeechSynthesisUtterance(card.word);
+    word.lang = "en-US";
+    word.rate = 0.9;
+    const hint = new SpeechSynthesisUtterance(card.hint);
+    hint.lang = "en-US";
+    hint.rate = 0.9;
+    const voice = pickVoice();
+    if (voice) { word.voice = voice; hint.voice = voice; }
+    word.onend = () => window.speechSynthesis.speak(hint);
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [card.word, ready]);
+    window.speechSynthesis.speak(word);
+    return () => window.speechSynthesis.cancel();
+  }, [card.word, card.hint, ready]);
 
   // Stopwatch — starts when camera is ready, stops when deck is complete.
   useEffect(() => {
