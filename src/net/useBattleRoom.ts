@@ -13,13 +13,19 @@ export type BattleStatus =
 export type Opponent = {
   id: string;
   name: string;
+  avatar?: string;
   cardIndex: number;
   score: number;
 };
 
+// Presence stays tiny (id + name only). The avatar photo is ~10 KB of base64,
+// which exceeds Presence's payload limit, so it travels over broadcast instead.
+type PresenceMeta = { id: string; name: string };
+
 type StartPayload = { seed: number; deckId: string };
 type ProgressPayload = { id: string; cardIndex: number; score: number };
 type FinishPayload = { id: string; score: number; finishedAt: number };
+type ProfilePayload = { id: string; avatar: string };
 
 /**
  * Owns the Supabase Realtime channel for one battle. Pose detection stays local
@@ -29,7 +35,8 @@ type FinishPayload = { id: string; score: number; finishedAt: number };
 export function useBattleRoom(
   roomCode: string | null,
   name: string,
-  isHost: boolean
+  isHost: boolean,
+  avatar: string | null = null
 ) {
   const myIdRef = useRef<string>(
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -37,6 +44,15 @@ export function useBattleRoom(
       : Math.random().toString(36).slice(2)
   );
   const channelRef = useRef<RealtimeChannel | null>(null);
+  // Latest name/avatar without forcing the channel effect to resubscribe.
+  const nameRef = useRef(name);
+  nameRef.current = name;
+  const avatarRef = useRef(avatar);
+  avatarRef.current = avatar;
+  const subscribedRef = useRef(false);
+  // Opponent's photo arrives via broadcast, possibly before/after their
+  // presence syncs — stash it so syncPresence can always reattach it.
+  const oppAvatarRef = useRef<string | undefined>(undefined);
 
   const [status, setStatus] = useState<BattleStatus>("connecting");
   const [opponent, setOpponent] = useState<Opponent | null>(null);
@@ -59,17 +75,29 @@ export function useBattleRoom(
     channelRef.current = channel;
 
     const syncPresence = () => {
-      const state = channel.presenceState<{ id: string; name: string }>();
+      const state = channel.presenceState<PresenceMeta>();
       const others = Object.values(state)
         .flat()
         .filter((p) => p.id !== myId);
       const other = others[0];
       if (other) {
-        setOpponent((prev) =>
-          prev && prev.id === other.id
-            ? prev
-            : { id: other.id, name: other.name || "Opponent", cardIndex: 0, score: 0 }
-        );
+        setOpponent((prev) => {
+          if (prev && prev.id === other.id) {
+            // Same opponent — refresh static fields (name, or a photo that
+            // arrived over broadcast) without wiping their live cardIndex/score.
+            const name = other.name || "Opponent";
+            const avatar = oppAvatarRef.current ?? prev.avatar;
+            if (prev.name === name && prev.avatar === avatar) return prev;
+            return { ...prev, name, avatar };
+          }
+          return {
+            id: other.id,
+            name: other.name || "Opponent",
+            avatar: oppAvatarRef.current,
+            cardIndex: 0,
+            score: 0,
+          };
+        });
         // Don't downgrade once the match is underway.
         setStatus((s) => (s === "playing" || s === "ended" ? s : "ready"));
       } else {
@@ -78,10 +106,29 @@ export function useBattleRoom(
       }
     };
 
+    // Tell a freshly-joined peer my photo (broadcasts they missed won't replay).
+    const sendProfile = () => {
+      if (!avatarRef.current) return;
+      channel.send({
+        type: "broadcast",
+        event: "profile",
+        payload: { id: myId, avatar: avatarRef.current } satisfies ProfilePayload,
+      });
+    };
+
     channel
       .on("presence", { event: "sync" }, syncPresence)
-      .on("presence", { event: "join" }, syncPresence)
+      .on("presence", { event: "join" }, () => {
+        syncPresence();
+        sendProfile();
+      })
       .on("presence", { event: "leave" }, syncPresence)
+      .on("broadcast", { event: "profile" }, ({ payload }) => {
+        const p = payload as ProfilePayload;
+        if (p.id === myId) return;
+        oppAvatarRef.current = p.avatar;
+        setOpponent((prev) => (prev ? { ...prev, avatar: p.avatar } : prev));
+      })
       .on("broadcast", { event: "start" }, ({ payload }) => {
         const p = payload as StartPayload;
         setSeed(p.seed);
@@ -102,7 +149,10 @@ export function useBattleRoom(
       })
       .subscribe(async (s) => {
         if (s === "SUBSCRIBED") {
-          await channel.track({ id: myId, name });
+          subscribedRef.current = true;
+          await channel.track({ id: myId, name: nameRef.current });
+          // If a photo was already captured before subscribe, announce it.
+          sendProfile();
           setStatus((cur) => (cur === "connecting" ? "waiting" : cur));
         } else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT") {
           setStatus("error");
@@ -110,12 +160,24 @@ export function useBattleRoom(
       });
 
     return () => {
+      subscribedRef.current = false;
       sb.removeChannel(channel);
       channelRef.current = null;
     };
-    // name is fixed for the lifetime of a match; only the room identity matters.
+    // name/avatar are pushed via refs + the broadcast effect below; only the
+    // room identity should drive (re)subscription.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode]);
+
+  // Broadcast a freshly-captured photo to the opponent once subscribed.
+  useEffect(() => {
+    if (!subscribedRef.current || !avatar) return;
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "profile",
+      payload: { id: myIdRef.current, avatar } satisfies ProfilePayload,
+    });
+  }, [avatar]);
 
   const startGame = useCallback((dId: string) => {
     const channel = channelRef.current;

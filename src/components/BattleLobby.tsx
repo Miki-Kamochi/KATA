@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DECKS, type Deck } from "../data/decks";
 import type { BattleStatus, Opponent } from "../net/useBattleRoom";
+import ProfileCapture from "./ProfileCapture";
 
 type Props = {
   roomCode: string | null;
@@ -8,6 +9,8 @@ type Props = {
   isHost: boolean;
   opponent: Opponent | null;
   hostDeck: Deck | null;
+  myAvatar: string | null;
+  onCapture: (dataUrl: string) => void;
   onCreate: (deckId: string) => void;
   onJoin: (code: string) => void;
   onStart: () => void;
@@ -20,6 +23,8 @@ export default function BattleLobby({
   isHost,
   opponent,
   hostDeck,
+  myAvatar,
+  onCapture,
   onCreate,
   onJoin,
   onStart,
@@ -62,18 +67,53 @@ export default function BattleLobby({
           </div>
         )}
 
-        {isHost ? (
-          <button
-            onClick={onStart}
-            disabled={!ready}
-            className="mt-10 rounded-lg bg-neutral-900 px-6 py-3 text-sm font-medium text-white enabled:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            Start battle
-          </button>
-        ) : (
-          <p className="mt-10 text-sm text-neutral-400">
-            Waiting for the host to start the battle…
-          </p>
+        {/* Once matched, each player takes a photo shown next to their race bar. */}
+        {ready && (
+          <>
+            <div className="mt-8 text-xs uppercase tracking-[0.2em] text-neutral-400">
+              Opponent
+            </div>
+            <div className="mt-3 flex items-center gap-4">
+              {opponent?.avatar ? (
+                <img
+                  src={opponent.avatar}
+                  alt={opponent.name}
+                  className="h-20 w-20 rounded-full object-cover ring-2 ring-neutral-900"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100 text-2xl text-neutral-300">
+                  🙂
+                </div>
+              )}
+              <span className="text-sm text-neutral-500">
+                {opponent?.avatar
+                  ? `${opponent?.name ?? "Opponent"} is ready`
+                  : "Waiting for their photo…"}
+              </span>
+            </div>
+
+            <div className="mt-8 text-xs uppercase tracking-[0.2em] text-neutral-400">
+              Your photo
+            </div>
+            <p className="mt-1 text-sm text-neutral-500">
+              Take your photo so your opponent can see who they're racing.
+            </p>
+            <ProfileCapture value={myAvatar} onCapture={onCapture} />
+
+            {isHost ? (
+              <button
+                onClick={onStart}
+                disabled={!myAvatar}
+                className="mt-10 rounded-lg bg-neutral-900 px-6 py-3 text-sm font-medium text-white enabled:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                {myAvatar ? "Start battle" : "Take your photo to start"}
+              </button>
+            ) : (
+              <p className="mt-10 text-sm text-neutral-400">
+                Waiting for the host to start the battle…
+              </p>
+            )}
+          </>
         )}
 
         {status === "error" && (

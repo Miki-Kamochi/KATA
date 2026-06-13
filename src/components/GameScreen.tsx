@@ -24,9 +24,16 @@ function pickVoice(): SpeechSynthesisVoice | null {
 /** Live opponent state shown during a battle. */
 export type OpponentInfo = {
   name: string;
+  avatar?: string;
   cardIndex: number;
   score: number;
   total: number;
+};
+
+/** The local player's profile, shown alongside the opponent during a battle. */
+export type MeInfo = {
+  name?: string;
+  avatar?: string | null;
 };
 
 type Props = {
@@ -39,7 +46,63 @@ type Props = {
   onProgress?: (cardIndex: number, score: number) => void;
   /** Opponent's live progress; absent in solo mode (renders nothing extra). */
   opponent?: OpponentInfo | null;
+  /** The local player's profile, shown next to the opponent in battle mode. */
+  me?: MeInfo;
 };
+
+/** Round avatar with a neutral fallback when no photo was captured. */
+function Avatar({ src, name }: { src?: string | null; name?: string }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name ?? "player"}
+        className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-neutral-200"
+      />
+    );
+  }
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm font-semibold text-neutral-500">
+      {name?.trim()?.[0]?.toUpperCase() ?? "🙂"}
+    </div>
+  );
+}
+
+/** One racer row: avatar + name + progress bar + score. */
+function RacerRow({
+  name,
+  avatar,
+  score,
+  total,
+  leading,
+}: {
+  name: string;
+  avatar?: string | null;
+  score: number;
+  total: number;
+  leading: boolean;
+}) {
+  const pct = total > 0 ? (score / total) * 100 : 0;
+  return (
+    <div className="flex items-center gap-3 text-xs">
+      <Avatar src={avatar} name={name} />
+      <span className="w-20 shrink-0 truncate font-medium text-neutral-700">
+        {name}
+      </span>
+      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
+        <div
+          className={`h-full rounded-full transition-[width] duration-300 ${
+            leading ? "bg-emerald-500" : "bg-neutral-400"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="shrink-0 tabular-nums text-neutral-500">
+        {score} / {total}
+      </span>
+    </div>
+  );
+}
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -54,6 +117,7 @@ export default function GameScreen({
   seed,
   onProgress,
   opponent,
+  me,
 }: Props) {
   const cards = useMemo(() => {
     // In battle mode a shared seed guarantees both players see the same order;
@@ -174,23 +238,23 @@ export default function GameScreen({
         </div>
       </div>
 
-      {/* Opponent race bar (battle mode only) */}
+      {/* Head-to-head progress (battle mode only) */}
       {opponent && (
-        <div className="flex items-center gap-3 text-xs">
-          <span className="w-24 shrink-0 truncate font-medium text-neutral-500">
-            {opponent.name}
-          </span>
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200">
-            <div
-              className="h-full rounded-full bg-rose-400 transition-[width] duration-300"
-              style={{
-                width: `${opponent.total > 0 ? (opponent.score / opponent.total) * 100 : 0}%`,
-              }}
-            />
-          </div>
-          <span className="shrink-0 tabular-nums text-neutral-500">
-            {opponent.score} / {opponent.total}
-          </span>
+        <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 p-3">
+          <RacerRow
+            name={me?.name ?? "You"}
+            avatar={me?.avatar}
+            score={score}
+            total={cards.length}
+            leading={score >= opponent.score}
+          />
+          <RacerRow
+            name={opponent.name}
+            avatar={opponent.avatar}
+            score={opponent.score}
+            total={opponent.total}
+            leading={opponent.score > score}
+          />
         </div>
       )}
 

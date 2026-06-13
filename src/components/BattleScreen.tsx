@@ -24,6 +24,7 @@ export default function BattleScreen({ onHome }: Props) {
   const [hostDeckId, setHostDeckId] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<null | "win" | "lose">(null);
   const [myScore, setMyScore] = useState<number | null>(null);
+  const [myAvatar, setMyAvatar] = useState<string | null>(null);
 
   const {
     status,
@@ -34,7 +35,9 @@ export default function BattleScreen({ onHome }: Props) {
     sendProgress,
     sendFinish,
     opponentFinished,
-  } = useBattleRoom(roomCode, "You", isHost);
+    // No real names are collected — send an empty name so the other side
+    // labels us "Opponent" (each player calls themselves "You" locally).
+  } = useBattleRoom(roomCode, "", isHost, myAvatar);
 
   // Resolve win/lose: the first finish observed locally settles it.
   useEffect(() => {
@@ -77,10 +80,12 @@ export default function BattleScreen({ onHome }: Props) {
         key={`${roomCode}-${seed}`}
         deck={deck}
         seed={seed}
+        me={{ name: "You", avatar: myAvatar }}
         opponent={
           opponent
             ? {
                 name: opponent.name,
+                avatar: opponent.avatar,
                 cardIndex: opponent.cardIndex,
                 score: opponent.score,
                 total: deck.cards.length,
@@ -106,6 +111,8 @@ export default function BattleScreen({ onHome }: Props) {
       isHost={isHost}
       opponent={opponent}
       hostDeck={hostDeck}
+      myAvatar={myAvatar}
+      onCapture={(dataUrl) => setMyAvatar(dataUrl || null)}
       onCreate={(id) => {
         setHostDeckId(id);
         setIsHost(true);
