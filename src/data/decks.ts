@@ -127,38 +127,6 @@ export const DECKS: Deck[] = [
         i18n: { zh: { word: "弓步", hint: "迈入深蹲弓步" }, ja: { word: "ランジ", hint: "大きく前に踏み出す" } } },
     ],
   },
-  {
-    id: "abstract-concepts",
-    title: "Big Ideas",
-    description: "Express abstract concepts — freedom, growth, balance — through your body.",
-    emoji: "",
-    difficulty: "Hard",
-    popularity: 289,
-    // Shares the yoga-poses model — same 5 motions, different vocabulary.
-    modelPath: "/models/yoga-poses/",
-    cards: [
-      { word: "Freedom",   motion: "t_pose",       hint: "Spread your arms wide — feel open and free",
-        i18n: { zh: { word: "自由", hint: "张开双臂——感受开放与自由" }, ja: { word: "自由", hint: "両腕を広げて——自由を感じる" } } },
-      { word: "Open",      motion: "t_pose",       hint: "Open your arms to the world",
-        i18n: { zh: { word: "开放", hint: "向世界张开双臂" }, ja: { word: "オープン", hint: "世界に向けて腕を開く" } } },
-      { word: "Growth",    motion: "hands_up",     hint: "Reach upward — stretch toward the sky",
-        i18n: { zh: { word: "成长", hint: "向上伸展——伸向天空" }, ja: { word: "成長", hint: "上に伸びる——空に向かって" } } },
-      { word: "Aspire",    motion: "hands_up",     hint: "Raise both arms high — reach for your goal",
-        i18n: { zh: { word: "向往", hint: "高举双臂——追向目标" }, ja: { word: "目指す", hint: "両腕を高く上げ、目標に向かう" } } },
-      { word: "Humility",  motion: "forward_fold", hint: "Bow forward — let go of pride",
-        i18n: { zh: { word: "谦逊", hint: "向前鞠躬——放下傲慢" }, ja: { word: "謙虚", hint: "前に頭を下げる——プライドを手放す" } } },
-      { word: "Gratitude", motion: "forward_fold", hint: "Bow deep — give thanks",
-        i18n: { zh: { word: "感恩", hint: "深深鞠躬——表达感谢" }, ja: { word: "感謝", hint: "深くお辞儀する——感謝を伝える" } } },
-      { word: "Energy",    motion: "star",         hint: "Burst outward — arms and legs wide",
-        i18n: { zh: { word: "能量", hint: "向外爆发——双臂双腿张开" }, ja: { word: "エネルギー", hint: "外に広がる——手足を大きく広げる" } } },
-      { word: "Joy",       motion: "star",         hint: "Spread wide — let your whole body celebrate",
-        i18n: { zh: { word: "喜悦", hint: "张开身体——让全身庆祝" }, ja: { word: "喜び", hint: "体を大きく広げて喜びを表す" } } },
-      { word: "Journey",   motion: "lunge",        hint: "Step boldly forward — you are on the move",
-        i18n: { zh: { word: "旅途", hint: "大步向前——你在前进" }, ja: { word: "旅", hint: "力強く前に踏み出す" } } },
-      { word: "Progress",  motion: "lunge",        hint: "Lunge ahead — keep moving forward",
-        i18n: { zh: { word: "进步", hint: "向前跨步——继续前进" }, ja: { word: "進歩", hint: "前に踏み出す——前進し続ける" } } },
-    ],
-  },
 ];
 
 export function getDeck(id: string): Deck | undefined {
