@@ -163,6 +163,18 @@ export default function BattleScreen({ onHome, initialDeckId }: Props) {
     );
   }
 
+  // ── Starting — hold a neutral splash until the synced startAt moment, so we
+  // don't flash the "waiting for opponent" lobby (and its camera blink) during
+  // the ~600 ms countdown-sync window. ────────────────────────────────────────
+  if (status === "playing") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-neutral-300" />
+        <p className="text-sm text-neutral-400">Get ready…</p>
+      </div>
+    );
+  }
+
   // ── Lobby (menu / create / join / waiting room) ─────────────────────────
   return (
     <BattleLobby

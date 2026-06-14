@@ -7,10 +7,8 @@ import mouseClick from "./MouseClick.mp3";
 /**
  * Named sound events → audio file mapping.
  *
- * countdownTick  — plays on each of 3, 2, 1
- * countdownGo    — plays on "Go!"
+ * countdownTick  — the full "3, 2, 1, go!" clip; played once at countdown start
  * cardCorrect    — motion matched; plays immediately on confirm
- * cardNextFlip   — plays when the next card slides in (~700 ms later)
  * cardWrong      — plays once when a wrong pose is held confidently
  * gameFinish     — solo deck cleared / battle ended (win or lose)
  * uiClick        — general button-click feedback
