@@ -11,9 +11,10 @@ type Props = {
 };
 
 const DECK_COLORS: Record<string, { cover: string; spine: string }> = {
-  "directions":   { cover: "bg-teal-700",   spine: "bg-teal-900"   },
-  "body-parts":   { cover: "bg-orange-700", spine: "bg-orange-900" },
-  "action-verbs": { cover: "bg-violet-700", spine: "bg-violet-900" },
+  "directions":        { cover: "bg-teal-700",   spine: "bg-teal-900"   },
+  "body-parts":        { cover: "bg-orange-700", spine: "bg-orange-900" },
+  "yoga-poses":        { cover: "bg-emerald-700", spine: "bg-emerald-900" },
+  "abstract-concepts": { cover: "bg-indigo-700", spine: "bg-indigo-900" },
 };
 
 const BOOK_HEIGHTS = ["h-[25vh]", "h-[30vh]", "h-[28vh]"];
