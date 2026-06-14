@@ -19,14 +19,14 @@ function formatTime(s: number) {
 const DECK_BAR_COLOR: Record<string, string> = {
   "directions":        "bg-teal-700",
   "body-parts":        "bg-orange-700",
-  "yoga-poses":        "bg-emerald-700",
+  "body-language":     "bg-emerald-700",
   "abstract-concepts": "bg-indigo-700",
 };
 
 export default function DashboardSheet({ onClose }: Props) {
   const best = safeParse<Record<string, number>>(
     localStorage.getItem("kata.best"),
-    { "directions": 7, "body-parts": 5, "yoga-poses": 6, "abstract-concepts": 3 }
+    { "directions": 7, "body-parts": 5, "body-language": 6 }
   );
   const stats = safeParse(
     localStorage.getItem("kata.stats"),

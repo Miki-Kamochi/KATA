@@ -1,4 +1,4 @@
-# yoga-poses model
+# body-language model
 
 Drop the Teachable Machine **Pose** export here:
 
@@ -9,15 +9,13 @@ Drop the Teachable Machine **Pose** export here:
 ## Required class names
 
 ```
+correct
+wrong
+thinking
 t_pose
-hands_up
-forward_fold
-star
-lunge
+bow
 idle
 ```
-
-This model is shared by both the **Yoga Poses** and **Big Ideas** decks.
 
 Until these files exist the app runs in **mock mode** automatically.
 See teachablemachine.withgoogle.com → New Project → Pose Project → Export → TensorFlow.js.
