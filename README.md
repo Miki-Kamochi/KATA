@@ -8,17 +8,12 @@ Act out the meaning of a word — point, reach, touch, strike a pose — and the
 
 <br />
 
-[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-overclocked--neon.vercel.app-000000?style=for-the-badge)](https://overclocked-neon.vercel.app)
-
-<br />
-
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
 ![TensorFlow.js](https://img.shields.io/badge/Teachable_Machine-Pose-FF6F00?logo=tensorflow&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Realtime-3FCF8E?logo=supabase&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel&logoColor=white)
 
 </div>
 
